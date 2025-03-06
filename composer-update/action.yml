@@ -127,7 +127,7 @@ runs:
       AWS_REGION: us-east-1
 
   - name: Composer Install without scripts
-    id: install
+    id: install-no-scripts
     if: inputs.composer_scripts == 'false'
     uses: cafuego/command-output@main
     with:
@@ -135,7 +135,7 @@ runs:
     continue-on-error: true
 
   - name: Composer Install with scripts
-    id: install
+    id: install-scripts
     if: inputs.composer_scripts == 'true'
     uses: cafuego/command-output@main
     with:
@@ -143,7 +143,7 @@ runs:
     continue-on-error: true
 
   - name: Composer Update without scripts
-    id: update
+    id: update-no-scripts
     if: inputs.composer_scripts == 'false'
     uses: cafuego/command-output@main
     with:
@@ -151,7 +151,7 @@ runs:
     continue-on-error: false
 
   - name: Composer Update with scripts
-    id: update
+    id: update-scripts
     if: inputs.composer_scripts == 'true'
     uses: cafuego/command-output@main
     with:
