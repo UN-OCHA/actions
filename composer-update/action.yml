@@ -15,6 +15,11 @@ inputs:
     required: false
     type: string
     default: "us-east-1"
+  composer_scripts:
+    description: "A flag that specifies whether to run composer scripts"
+    required: false
+    type: string
+    default: "false"
   github_access_token:
     description: "A GitHub personal access token."
     required: true
@@ -121,18 +126,36 @@ runs:
     env:
       AWS_REGION: us-east-1
 
-  - name: Composer Install
+  - name: Composer Install without scripts
     id: install
+    if: inputs.composer_scripts == 'false'
     uses: cafuego/command-output@main
     with:
       run: composer install --no-interaction --prefer-dist --no-scripts
     continue-on-error: true
 
-  - name: Composer Update
+  - name: Composer Install with scripts
+    id: install
+    if: inputs.composer_scripts == 'true'
+    uses: cafuego/command-output@main
+    with:
+      run: composer install --no-interaction --prefer-dist
+    continue-on-error: true
+
+  - name: Composer Update without scripts
     id: update
+    if: inputs.composer_scripts == 'false'
     uses: cafuego/command-output@main
     with:
       run: composer update --with-all-dependencies ${{ inputs.patch_packages }} --no-interaction --prefer-dist --no-scripts
+    continue-on-error: false
+
+  - name: Composer Update with scripts
+    id: update
+    if: inputs.composer_scripts == 'true'
+    uses: cafuego/command-output@main
+    with:
+      run: composer update --with-all-dependencies ${{ inputs.patch_packages }} --no-interaction --prefer-dist
     continue-on-error: false
 
   - name: Composer Outdated
