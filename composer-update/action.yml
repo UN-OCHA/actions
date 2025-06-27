@@ -19,7 +19,7 @@ inputs:
     description: "A flag that specifies whether to run composer scripts"
     required: false
     type: string
-    default: "true"
+    default: "false"
   github_access_token:
     description: "A GitHub personal access token."
     required: true
