@@ -15,6 +15,11 @@ inputs:
     required: false
     type: string
     default: "us-east-1"
+  composer_scripts:
+    description: "A flag that specifies whether to run composer scripts"
+    required: false
+    type: string
+    default: "false"
   github_access_token:
     description: "A GitHub personal access token."
     required: true
@@ -27,7 +32,7 @@ inputs:
   patch_packages:
     description: "The package(s) to check for updates."
     required: false
-    default: "drupal/* unocha/* drush/*"
+    default: "drupal/* unocha/* drush/* weitzman/drupal-test-traits"
     type: string
   patch_config:
     description: "A flag that specifies whether to run updates and generate updated Drupal config."
@@ -104,7 +109,7 @@ runs:
   - name: Configure AWS Credentials
     id: aws
     if: contains(${{ inputs.patch_packages }}, 'drupal')
-    uses: aws-actions/configure-aws-credentials@v4
+    uses: aws-actions/configure-aws-credentials@v6
     with:
       aws-access-key-id: ${{ inputs.aws_access_key_id }}
       aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
@@ -121,18 +126,36 @@ runs:
     env:
       AWS_REGION: us-east-1
 
-  - name: Composer Install
-    id: install
+  - name: Composer Install without scripts
+    id: install-no-scripts
+    if: inputs.composer_scripts == 'false'
     uses: cafuego/command-output@main
     with:
-      run: composer install --no-scripts
+      run: composer install --no-interaction --prefer-dist --no-scripts
     continue-on-error: true
 
-  - name: Composer Update
-    id: update
+  - name: Composer Install with scripts
+    id: install-scripts
+    if: inputs.composer_scripts == 'true'
     uses: cafuego/command-output@main
     with:
-      run: composer update --with-all-dependencies ${{ inputs.patch_packages }} --no-scripts
+      run: composer install --no-interaction --prefer-dist
+    continue-on-error: true
+
+  - name: Composer Update without scripts
+    id: update-no-scripts
+    if: inputs.composer_scripts == 'false'
+    uses: cafuego/command-output@main
+    with:
+      run: composer update --with-all-dependencies ${{ inputs.patch_packages }} --no-interaction --prefer-dist --no-scripts
+    continue-on-error: false
+
+  - name: Composer Update with scripts
+    id: update-scripts
+    if: inputs.composer_scripts == 'true'
+    uses: cafuego/command-output@main
+    with:
+      run: composer update --with-all-dependencies ${{ inputs.patch_packages }} --no-interaction --prefer-dist
     continue-on-error: false
 
   - name: Composer Outdated
@@ -212,7 +235,7 @@ runs:
 
   - name: Create Pull Request
     id: pull
-    uses: peter-evans/create-pull-request@v6
+    uses: peter-evans/create-pull-request@v8
     with:
       token: ${{ inputs.github_access_token }}
       commit-message: "chore: Update all outdated ${{ inputs.patch_packages }} packages."
@@ -261,7 +284,7 @@ runs:
   - name: Slack Success Notification
     id: slack_success
     if: success() && inputs.slack_bot_token && inputs.slack_channel_name && steps.pull.outputs.pull-request-number
-    uses: slackapi/slack-github-action@v1.25.0
+    uses: slackapi/slack-github-action@v3
     with:
       channel-id: '${{ inputs.slack_channel_name }}'
       payload: |
@@ -288,7 +311,7 @@ runs:
   - name: Slack Failure Notification
     id: slack_failure
     if: failure() && inputs.slack_bot_token && inputs.slack_channel_name
-    uses: slackapi/slack-github-action@v1.25.0
+    uses: slackapi/slack-github-action@v3
     with:
       channel-id: '${{ inputs.slack_channel_name }}'
       payload: |
