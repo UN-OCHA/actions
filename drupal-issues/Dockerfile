@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:24
 
 LABEL org.opencontainers.image.description "Scan code for Drupal issues and post summaries of them on a pull request."
 
