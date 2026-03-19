@@ -109,7 +109,7 @@ runs:
   - name: Configure AWS Credentials
     id: aws
     if: contains(${{ inputs.patch_packages }}, 'drupal')
-    uses: aws-actions/configure-aws-credentials@v4
+    uses: aws-actions/configure-aws-credentials@v6
     with:
       aws-access-key-id: ${{ inputs.aws_access_key_id }}
       aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
@@ -235,7 +235,7 @@ runs:
 
   - name: Create Pull Request
     id: pull
-    uses: peter-evans/create-pull-request@v6
+    uses: peter-evans/create-pull-request@v8
     with:
       token: ${{ inputs.github_access_token }}
       commit-message: "chore: Update all outdated ${{ inputs.patch_packages }} packages."
@@ -284,7 +284,7 @@ runs:
   - name: Slack Success Notification
     id: slack_success
     if: success() && inputs.slack_bot_token && inputs.slack_channel_name && steps.pull.outputs.pull-request-number
-    uses: slackapi/slack-github-action@v1.25.0
+    uses: slackapi/slack-github-action@v3
     with:
       channel-id: '${{ inputs.slack_channel_name }}'
       payload: |
@@ -311,7 +311,7 @@ runs:
   - name: Slack Failure Notification
     id: slack_failure
     if: failure() && inputs.slack_bot_token && inputs.slack_channel_name
-    uses: slackapi/slack-github-action@v1.25.0
+    uses: slackapi/slack-github-action@v3
     with:
       channel-id: '${{ inputs.slack_channel_name }}'
       payload: |
