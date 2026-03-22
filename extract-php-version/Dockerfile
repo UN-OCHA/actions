@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:24
 
 # nice clean home for our action files
 RUN mkdir /action
