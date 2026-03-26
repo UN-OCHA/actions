@@ -286,9 +286,11 @@ runs:
     if: success() && inputs.slack_bot_token && inputs.slack_channel_name && steps.pull.outputs.pull-request-number
     uses: slackapi/slack-github-action@v3
     with:
-      channel-id: '${{ inputs.slack_channel_name }}'
+      method: chat.postMessage
+      token: ${{ secrets.SLACK_BOT_TOKEN }}
       payload: |
         {
+          "channel": "${{ inputs.slack_channel_name }}",
           "text": "Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }}",
           "attachments": [
             {
@@ -305,17 +307,17 @@ runs:
             }
           ]
         }
-    env:
-      SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
 
   - name: Slack Failure Notification
     id: slack_failure
     if: failure() && inputs.slack_bot_token && inputs.slack_channel_name
     uses: slackapi/slack-github-action@v3
     with:
-      channel-id: '${{ inputs.slack_channel_name }}'
+      method: chat.postMessage
+      token: ${{ secrets.SLACK_BOT_TOKEN }}
       payload: |
         {
+          "channel": "${{ inputs.slack_channel_name }}",
           "text": "Failed to apply updates for ${{ github.repository }}",
           "attachments": [
             {
@@ -332,5 +334,3 @@ runs:
             }
           ]
         }
-    env:
-      SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
