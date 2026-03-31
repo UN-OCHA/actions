@@ -91,14 +91,15 @@ runs:
       docker_file: 'docker/Dockerfile'
       docker_image: 'public.ecr.aws/unocha/php-k8s'
 
-  - name: Setup PHP with PECL extension
+  - name: Setup PHP with PECL extensions
     uses: shivammathur/setup-php@v2
     with:
-      php-version: ${{ steps.php.outputs.php_version }}
+      php-version: ${{ inputs.php_version }}
       extensions: gd, mbstring, xmlwriter, dom, curl
       tools: composer
     env:
       fail-fast: true
+      runner: fromJSON('{"false": "ubuntu-slim", "true": "self-hosted"}')[env.ACT]
 
   - name: Software versions
     id: versions
@@ -283,7 +284,7 @@ runs:
 
   - name: Slack Success Notification
     id: slack_success
-    if: success() && inputs.slack_bot_token && inputs.slack_channel_name && steps.pull.outputs.pull-request-number
+    if: inputs.slack_bot_token && inputs.slack_channel_name
     uses: slackapi/slack-github-action@v3
     with:
       method: chat.postMessage
@@ -291,46 +292,22 @@ runs:
       payload: |
         {
           "channel": "${{ inputs.slack_channel_name }}",
-          "text": "Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }}",
+          "text": "Composer Update for ${{ github.repository }}"
           "attachments": [
             {
-              "color": "#36A64F",
+              "color": "${{ env.SLACK_COLOR }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }} (<${{ steps.pull.outputs.pull-request-url }}|Review>)"
+                    "text": "${{ env.SLACK_MESSAGE }}"
                   }
                 }
               ]
             }
           ]
         }
-
-  - name: Slack Failure Notification
-    id: slack_failure
-    if: failure() && inputs.slack_bot_token && inputs.slack_channel_name
-    uses: slackapi/slack-github-action@v3
-    with:
-      method: chat.postMessage
-      token: ${{ inputs.slack_bot_token }}
-      payload: |
-        {
-          "channel": "${{ inputs.slack_channel_name }}",
-          "text": "Failed to apply updates for ${{ github.repository }}",
-          "attachments": [
-            {
-              "color": "#FF0000",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)"
-                  }
-                }
-              ]
-            }
-          ]
-        }
+    env:
+      SLACK_COLOR: "${{ job.status == 'success' && 'good' || 'danger' }}"
+      SLACK_MESSAGE: "${{ job.status == 'success' && 'Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }} (<${{ steps.pull.outputs.pull-request-url }}|Review>)' || 'Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)' }}"
