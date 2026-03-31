@@ -79,7 +79,7 @@ runs:
 
   - name: Checkout code
     id: checkout
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6
     with:
       ref: '${{ inputs.patch_branch }}'
       token: '${{ inputs.github_access_token }}'
@@ -119,7 +119,7 @@ runs:
   - name: Login to Public ECR
     id: aws-login
     if: contains(${{ inputs.patch_packages }}, 'drupal')
-    uses: docker/login-action@v3.0.0
+    uses: docker/login-action@v4
     with:
       registry: public.ecr.aws
       username: ${{ inputs.aws_access_key_id }}
