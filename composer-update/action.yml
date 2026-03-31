@@ -99,7 +99,7 @@ runs:
       tools: composer
     env:
       fail-fast: true
-      runner: fromJSON('{"false": "ubuntu-slim", "true": "self-hosted"}')[env.ACT]
+      runner: ${{ fromJSON('{"false":"ubuntu-slim", "true":"self-hosted"}')[env.ACT != null] }}
 
   - name: Software versions
     id: versions
@@ -282,7 +282,18 @@ runs:
       reviewers: ${{ inputs.patch_maintainers}}
     continue-on-error: true
 
-  - name: Slack Success Notification
+  - name: Slack Message
+    id: slack_message
+    shell: bash
+    if: inputs.slack_bot_token && inputs.slack_channel_name
+    run: |
+      if [[ "${{ job.status }}" == "success" ]]; then
+        echo "message=Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status}} (<${{ steps.pull.outputs.pull-request-url }}|Review>)" >> $GITHUB_OUTPUT
+      else
+        echo "message=Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)" >> $GITHUB_OUTPUT
+      fi
+
+  - name: Slack Notification
     id: slack_success
     if: inputs.slack_bot_token && inputs.slack_channel_name
     uses: slackapi/slack-github-action@v3
@@ -292,7 +303,7 @@ runs:
       payload: |
         {
           "channel": "${{ inputs.slack_channel_name }}",
-          "text": "Composer Update for ${{ github.repository }}"
+          "text": "Composer Update for ${{ github.repository }}",
           "attachments": [
             {
               "color": "${{ env.SLACK_COLOR }}",
@@ -301,7 +312,7 @@ runs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ env.SLACK_MESSAGE }}"
+                    "text": "${{ steps.slack_message.outputs.message }}",
                   }
                 }
               ]
@@ -309,5 +320,4 @@ runs:
           ]
         }
     env:
-      SLACK_COLOR: "${{ job.status == 'success' && 'good' || 'danger' }}"
-      SLACK_MESSAGE: "${{ job.status == 'success' && 'Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }} (<${{ steps.pull.outputs.pull-request-url }}|Review>)' || 'Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)' }}"
+      SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
