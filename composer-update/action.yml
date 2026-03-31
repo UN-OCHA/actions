@@ -320,4 +320,4 @@ runs:
           ]
         }
     env:
-      SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
+      SLACK_COLOR: ${{ job.status == 'success' && '#36A64F' || '#FF0000' }}
