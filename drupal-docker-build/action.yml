@@ -174,7 +174,7 @@ runs:
     uses: slackapi/slack-github-action@v3
     with:
       method: chat.postMessage
-      token: ${{ secrets.SLACK_BOT_TOKEN }}
+      token: ${{ inputs.slack_bot_token }}
       payload: |
         {
           "channel": "${{ inputs.slack_channel_name }}",
@@ -194,8 +194,6 @@ runs:
             }
           ]
         }
-    env:
-      SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
 
   - name: Slack Notification
     id: slack_failure
@@ -203,7 +201,7 @@ runs:
     uses: slackapi/slack-github-action@v3
     with:
       method: chat.postMessage
-      token: ${{ secrets.SLACK_BOT_TOKEN }}
+      token: ${{ inputs.slack_bot_token }}
       payload: |
         {
           "channel": "${{ inputs.slack_channel_name }}",
@@ -223,5 +221,3 @@ runs:
           }
         ]
         }
-    env:
-      SLACK_BOT_TOKEN: ${{ inputs.slack_bot_token }}
