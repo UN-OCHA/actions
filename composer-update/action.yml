@@ -79,7 +79,7 @@ runs:
 
   - name: Checkout code
     id: checkout
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6
     with:
       ref: '${{ inputs.patch_branch }}'
       token: '${{ inputs.github_access_token }}'
@@ -91,14 +91,15 @@ runs:
       docker_file: 'docker/Dockerfile'
       docker_image: 'public.ecr.aws/unocha/php-k8s'
 
-  - name: Setup PHP with PECL extension
+  - name: Setup PHP with PECL extensions
     uses: shivammathur/setup-php@v2
     with:
-      php-version: ${{ steps.php.outputs.php_version }}
+      php-version: ${{ inputs.php_version }}
       extensions: gd, mbstring, xmlwriter, dom, curl
       tools: composer
     env:
       fail-fast: true
+      runner: ${{ fromJSON('{"false":"ubuntu-slim", "true":"self-hosted"}')[env.ACT != null] }}
 
   - name: Software versions
     id: versions
@@ -118,7 +119,7 @@ runs:
   - name: Login to Public ECR
     id: aws-login
     if: contains(${{ inputs.patch_packages }}, 'drupal')
-    uses: docker/login-action@v3.0.0
+    uses: docker/login-action@v4
     with:
       registry: public.ecr.aws
       username: ${{ inputs.aws_access_key_id }}
@@ -281,36 +282,20 @@ runs:
       reviewers: ${{ inputs.patch_maintainers}}
     continue-on-error: true
 
-  - name: Slack Success Notification
-    id: slack_success
-    if: success() && inputs.slack_bot_token && inputs.slack_channel_name && steps.pull.outputs.pull-request-number
-    uses: slackapi/slack-github-action@v3
-    with:
-      method: chat.postMessage
-      token: ${{ inputs.slack_bot_token }}
-      payload: |
-        {
-          "channel": "${{ inputs.slack_channel_name }}",
-          "text": "Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }}",
-          "attachments": [
-            {
-              "color": "#36A64F",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status }} (<${{ steps.pull.outputs.pull-request-url }}|Review>)"
-                  }
-                }
-              ]
-            }
-          ]
-        }
+  - name: Slack Message
+    id: slack_message
+    shell: bash
+    if: inputs.slack_bot_token && inputs.slack_channel_name
+    run: |
+      if [[ "${{ job.status }}" == "success" ]]; then
+        echo "message=Created an up to date pull request for ${{ github.repository }} from ${{ github.ref }} ${{ job.status}} (<${{ steps.pull.outputs.pull-request-url }}|Review>)" >> $GITHUB_OUTPUT
+      else
+        echo "message=Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)" >> $GITHUB_OUTPUT
+      fi
 
-  - name: Slack Failure Notification
-    id: slack_failure
-    if: failure() && inputs.slack_bot_token && inputs.slack_channel_name
+  - name: Slack Notification
+    id: slack_success
+    if: inputs.slack_bot_token && inputs.slack_channel_name
     uses: slackapi/slack-github-action@v3
     with:
       method: chat.postMessage
@@ -318,19 +303,21 @@ runs:
       payload: |
         {
           "channel": "${{ inputs.slack_channel_name }}",
-          "text": "Failed to apply updates for ${{ github.repository }}",
+          "text": "Composer Update for ${{ github.repository }}",
           "attachments": [
             {
-              "color": "#FF0000",
+              "color": "${{ env.SLACK_COLOR }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Failed to apply updates for ${{ github.repository }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Review>)"
+                    "text": "${{ steps.slack_message.outputs.message }}",
                   }
                 }
               ]
             }
           ]
         }
+    env:
+      SLACK_COLOR: ${{ job.status == 'success' && '#36A64F' || '#FF0000' }}
