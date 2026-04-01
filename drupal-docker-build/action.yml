@@ -187,7 +187,7 @@ runs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Docker image build ${{ job.status }} for `${{ inputs.docker_image }}:${{ steps.meta.outputs.DOCKER_TAG }}` from ${{ github.ref }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Details>)",
+                    "text": "Docker image build ${{ job.status }} for `${{ inputs.docker_image }}:${{ steps.meta.outputs.DOCKER_TAG }}` from ${{ github.ref }} (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Details>)"
                   }
                 }
               ]
