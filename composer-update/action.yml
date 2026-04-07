@@ -99,7 +99,7 @@ runs:
       tools: composer
     env:
       fail-fast: true
-      runner: ${{ fromJSON('{"false":"ubuntu-slim", "true":"self-hosted"}')[env.ACT != null] }}
+      runner: ${{ fromJSON('{"false":"ubuntu-latest", "true":"self-hosted"}')[env.ACT != null] }}
 
   - name: Software versions
     id: versions
