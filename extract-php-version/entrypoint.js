@@ -2,10 +2,10 @@ const core = require('@actions/core');
 const fs = require('fs');
 
 /**
- * Run determine-env.
+ * Run extract-php-version.
  *
- * Basically, set an environment variable that we can use as NODE_ENV later
- * on to distinguish between production and non-production.
+ * Basically, parse the docker image version from Dockerfile and set a few
+ * output variables so the actions environment can install the same version.
  */
 async function run() {
   const docker_file  = core.getInput('docker_file',  { required: false }) || 'Dockerfile';
