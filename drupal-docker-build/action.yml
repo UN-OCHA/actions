@@ -80,10 +80,6 @@ runs:
       aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
       aws-region: us-east-1
 
-  - name: Determine environment type
-    id: env
-    uses: docker://ghcr.io/un-ocha/actions:determine-environment-main
-
   - name: Login to Public ECR
     id: login-public
     if: inputs.docker_username
