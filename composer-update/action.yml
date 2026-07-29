@@ -95,7 +95,7 @@ runs:
   - name: Setup PHP with PECL extensions
     uses: shivammathur/setup-php@v2
     with:
-      php-version: ${{ inputs.php_version }}
+      php-version: ${{ steps.php.outputs.php_version }}
       extensions: gd, mbstring, xmlwriter, dom, curl
       tools: composer
     env:
@@ -110,7 +110,6 @@ runs:
 
   - name: Configure AWS Credentials
     id: aws
-    if: contains(${{ inputs.patch_packages }}, 'drupal')
     uses: aws-actions/configure-aws-credentials@v6
     with:
       role-to-assume: ${{ inputs.aws_role }}
