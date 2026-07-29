@@ -58,19 +58,19 @@ runs:
       role-session-name: ${{ github.run_id }}
       aws-region: ${{ inputs.aws_region }}
 
- - name: Login to Amazon ECR
-   id: login-ecr
-   uses: aws-actions/amazon-ecr-login@v2
-   with:
-     registry-type: public
+  - name: Login to Amazon ECR
+    id: login-ecr
+    uses: aws-actions/amazon-ecr-login@v2
+    with:
+      registry-type: public
 
- - name: Login to Private ECR
-   id: login-private
-   if: endsWith(inputs.docker_registry_url, '.amazonaws.com')
-   uses: aws-actions/amazon-ecr-login@v2
-   with:
-     registry-type: private
-     registries: ${{ inputs.aws_account }}
+  - name: Login to Private ECR
+    id: login-private
+    if: endsWith(inputs.docker_registry_url, '.amazonaws.com')
+    uses: aws-actions/amazon-ecr-login@v2
+    with:
+      registry-type: private
+      registries: ${{ inputs.aws_account }}
 
   - name: Image Metadata
     id: meta
